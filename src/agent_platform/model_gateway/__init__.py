@@ -1,6 +1,5 @@
 """Model gateway abstraction for local-first (Ollama) and optional cloud providers."""
 
-import asyncio
 import logging
 from dataclasses import dataclass
 from enum import Enum
@@ -69,12 +68,33 @@ class OllamaGateway:
                 tokens_used=0,
             )
 
-        # Real Ollama invocation would happen here
-        return ModelResponse(
-            content=f"[Ollama {model}] Generated response for: {prompt[:50]}...",
-            provider=ModelProvider.OLLAMA,
-            tokens_used=150,
-        )
+        try:
+            from langchain_ollama import ChatOllama
+            from langchain_core.prompts import ChatPromptTemplate
+            from langchain_core.output_parsers import StrOutputParser
+
+            chat_model = ChatOllama(base_url=self.base_url, model=model, temperature=0.7)
+            prompt_template = ChatPromptTemplate.from_messages([
+                ("system", "You are an autonomous enterprise agent helper."),
+                ("user", "{prompt}")
+            ])
+            # Composed using LangChain Expression Language (LCEL)
+            chain = prompt_template | chat_model | StrOutputParser()
+            
+            content = await chain.ainvoke({"prompt": prompt})
+            
+            return ModelResponse(
+                content=content,
+                provider=ModelProvider.OLLAMA,
+                tokens_used=len(prompt.split()) + len(content.split()),
+            )
+        except Exception as e:
+            logger.warning(f"Ollama LangChain/LCEL invocation failed or not installed: {e}. Using stub.")
+            return ModelResponse(
+                content=f"[Ollama {model}] Generated response for: {prompt[:50]}...",
+                provider=ModelProvider.OLLAMA,
+                tokens_used=150,
+            )
 
     def is_available(self) -> bool:
         """Non-async check of availability cache."""

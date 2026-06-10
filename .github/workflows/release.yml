@@ -27,7 +27,7 @@ concurrency:
 
 jobs:
   quality-gate:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
@@ -64,7 +64,7 @@ jobs:
   publish-python:
     needs: quality-gate
     if: github.event_name == 'push' || inputs.publish_python
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     env:
       PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
@@ -102,7 +102,7 @@ jobs:
   publish-container:
     needs: quality-gate
     if: github.event_name == 'push' || inputs.publish_container
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     env:
       CONTAINER_REGISTRY: ${{ vars.CONTAINER_REGISTRY || 'ghcr.io' }}
       CONTAINER_IMAGE_NAME: ${{ vars.CONTAINER_IMAGE_NAME || github.repository }}

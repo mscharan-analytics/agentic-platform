@@ -56,8 +56,13 @@ deployment = [
   "azure-identity>=1.13.0",
   "azure-devops>=7.0.0"
 ]
+langchain = [
+  "langchain>=0.1.0",
+  "langchain-community>=0.0.10",
+  "langchain-ollama>=0.0.1"
+]
 all = [
-  "enterprise-agent-platform[dev,mcp,docker,ollama,deployment]"
+  "enterprise-agent-platform[dev,mcp,docker,ollama,deployment,langchain]"
 ]
 
 [project.urls]

@@ -53,7 +53,7 @@ async def login(request: LoginRequest) -> TokenResponse:
 @router.post("/token", response_model=TokenResponse)
 async def get_token(username: str, password: str) -> TokenResponse:
     """Alias for /login for compatibility."""
-    return await login(username, password)
+    return await login(LoginRequest(username=username, password=password))
 
 
 @router.get("/me")

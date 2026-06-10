@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
-from agent_platform.deployment_adapters.ollama import OllamaDeploymentAdapter, OllamaConfig
+from agent_platform.deployment_adapters.ollama import OllamaDeploymentAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +49,12 @@ class OllamaTools:
                         "available": True,
                         "count": len(models),
                         "models": models,
+                    }
+                else:
+                    return {
+                        "available": False,
+                        "message": f"Ollama returned HTTP status {response.status_code}",
+                        "models": [],
                     }
         except Exception as e:
             logger.error(f"Error listing models: {e}")
@@ -100,6 +105,7 @@ class OllamaTools:
                 "message": "Ollama service not available",
             }
 
+        error_msg = "Ollama version check failed"
         try:
             import httpx
 
@@ -113,10 +119,13 @@ class OllamaTools:
                         "gpu_enabled": adapter.config.gpu_enabled,
                         "service_status": "healthy",
                     }
+                else:
+                    error_msg = f"HTTP status {response.status_code}"
         except Exception as e:
             logger.error(f"Error getting version: {e}")
+            error_msg = str(e)
 
-        return {"available": False, "error": str(e)}
+        return {"available": False, "error": error_msg}
 
     @staticmethod
     async def ollama_health_check() -> dict[str, object]:

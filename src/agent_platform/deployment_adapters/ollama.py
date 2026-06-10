@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import os
 from dataclasses import dataclass
@@ -120,6 +119,7 @@ class OllamaDeploymentAdapter:
                 "message": "Ollama not initialized or unreachable",
             }
 
+        error_msg = "Ollama returned non-200 status code"
         try:
             import httpx
 
@@ -132,10 +132,13 @@ class OllamaDeploymentAdapter:
                         "models_loaded": len(models_data.get("models", [])),
                         "models": [m.get("name", "unknown") for m in models_data.get("models", [])],
                     }
+                else:
+                    error_msg = f"HTTP status {response.status_code}"
         except Exception as e:
             logger.error(f"Health check failed: {e}")
+            error_msg = str(e)
 
-        return {"service_available": False, "error": str(e)}
+        return {"service_available": False, "error": error_msg}
 
     def is_available(self) -> bool:
         """Check if Ollama service is available."""
