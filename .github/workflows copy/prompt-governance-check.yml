@@ -1,0 +1,80 @@
+name: Prompt Governance Check
+
+on:
+  pull_request:
+    paths:
+      - ".github/prompts/**"
+      - ".github/skills/**"
+      - ".github/workflows/**"
+      - "MASTER_AGENT.md"
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/prompts/**"
+      - ".github/skills/**"
+      - ".github/workflows/**"
+      - "MASTER_AGENT.md"
+
+jobs:
+  validate-governance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required prompt commands
+        shell: bash
+        run: |
+          set -euo pipefail
+          required=(
+            ".github/prompts/prompt-coach.prompt.md"
+            ".github/prompts/system-agent.prompt.md"
+            ".github/prompts/master-agent.prompt.md"
+            ".github/prompts/agent-intake.prompt.md"
+            ".github/prompts/session-manager.prompt.md"
+            ".github/prompts/context-manager.prompt.md"
+            ".github/prompts/token-manager.prompt.md"
+            ".github/prompts/graphify-agent.prompt.md"
+            ".github/prompts/governance-agent.prompt.md"
+            ".github/prompts/problem-router.prompt.md"
+            ".github/prompts/session-closeout.prompt.md"
+            ".github/prompts/next-session-start.prompt.md"
+          )
+          for f in "${required[@]}"; do
+            [[ -f "$f" ]] || { echo "Missing required prompt: $f"; exit 1; }
+          done
+
+      - name: Validate prompt frontmatter
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in .github/prompts/*.prompt.md; do
+            head -n 1 "$f" | grep -q "^---$" || { echo "Frontmatter start missing in $f"; exit 1; }
+            grep -q "^name:" "$f" || { echo "name field missing in $f"; exit 1; }
+            grep -q "^description:" "$f" || { echo "description field missing in $f"; exit 1; }
+          done
+
+      - name: Validate skills
+        shell: bash
+        run: |
+          set -euo pipefail
+          for d in .github/skills/*; do
+            [[ -d "$d" ]] || continue
+            [[ -f "$d/SKILL.md" ]] || { echo "Missing SKILL.md in $d"; exit 1; }
+          done
+          [[ -f ".github/skills/problem-routing/SKILL.md" ]] || { echo "Missing problem-routing skill"; exit 1; }
+
+      - name: Validate master governance sections
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q "SESSION MANAGEMENT" MASTER_AGENT.md || { echo "MASTER_AGENT.md missing SESSION MANAGEMENT section"; exit 1; }
+          grep -q "CONTEXT MANAGEMENT" MASTER_AGENT.md || { echo "MASTER_AGENT.md missing CONTEXT MANAGEMENT section"; exit 1; }
+          grep -q "TOKEN MANAGEMENT" MASTER_AGENT.md || { echo "MASTER_AGENT.md missing TOKEN MANAGEMENT section"; exit 1; }
+
+      - name: Validate persistent context files
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ -f ".github/context/PROJECT-CONTEXT.md" ]] || { echo "Missing .github/context/PROJECT-CONTEXT.md"; exit 1; }
+          [[ -f ".github/context/summaries/SESSION-LATEST.md" ]] || { echo "Missing .github/context/summaries/SESSION-LATEST.md"; exit 1; }

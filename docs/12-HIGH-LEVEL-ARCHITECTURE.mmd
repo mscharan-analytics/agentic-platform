@@ -1,0 +1,36 @@
+flowchart LR
+    A["Install package<br/>pip install enterprise-agent-platform"] --> B{"How do you want to work?"}
+
+    subgraph IDEFLOW[IDE flow]
+        direction LR
+        C["Open repo in VS Code or IDE"] --> D{"Is the task clear?"}
+        D -->|No| E["Use /solver-agent<br/>to analyze and plan"]
+        D -->|Yes| F["Use /worker-agent<br/>for direct execution"]
+        E --> F
+        F --> G["Read repo and change code"]
+        G --> H["Run validation<br/>pytest, ruff, mypy, build"]
+        H --> I{"Validation passes?"}
+        I -->|No| J["Fix issues and re-run validation"]
+        J --> G
+        I -->|Yes| K["Create branch, commit, push"]
+        K --> L["Open PR"]
+        L --> M["CI runs on self-hosted runner"]
+        M --> N{"PR and CI pass?"}
+        N -->|No| O["Fix review or CI issues<br/>and push again"]
+        O --> G
+        N -->|Yes| P["Merge to main"]
+        P --> Q["Release workflow builds<br/>package and image"]
+        Q --> R["Deploy through GitHub Actions<br/>Azure DevOps, or Jenkins"]
+        R --> S["Deployed and ready<br/>for next iteration"]
+    end
+
+    subgraph CLIFLOW[CLI flow]
+        direction LR
+        T["Run agent-platform<br/>--goal your-objective"] --> U["CLI loads runtime<br/>and agent registry"]
+        U --> V["Autonomous runner<br/>processes the goal"]
+        V --> W["Internal validation runs"]
+        W --> X["CLI prints JSON result<br/>with trace, steps, and evaluation"]
+    end
+
+    B -->|IDE| C
+    B -->|CLI| T

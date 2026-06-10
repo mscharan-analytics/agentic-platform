@@ -1,0 +1,73 @@
+sequenceDiagram
+    autonumber
+    actor User
+    participant CLI as CLI main.py
+    participant MCP as MCP setup
+    participant Runner as AutonomousRunner
+    participant Solver as SolverAgent
+    participant Planner as PlannerAgent
+    participant Policy as PolicyEngine
+    participant Worker as CodeWorker
+    participant Eval as EvaluatorAgent
+    participant Sched as SchedulerAgent
+    participant Build as IntegrationWorker
+    participant Validate as ValidationAgent
+    participant Deploy as DeploymentAgent
+
+    Note over User,Deploy: Current repository execution story
+
+    User->>CLI: Start with a goal
+    CLI->>MCP: Register MCP tools
+    CLI->>Runner: Create runner with hooks, policy, and agent registry
+
+    rect rgb(245, 248, 255)
+        Note over Runner,Eval: Simple run() path
+        Runner->>Solver: Build ACP context and decompose goal
+        Solver-->>Runner: Problem statement and constraints
+        Runner->>Planner: Build execution plan
+        Planner-->>Runner: Task plan and milestones
+        loop Work loop
+            Runner->>Policy: Check whether current action is allowed
+            alt Action allowed
+                Policy-->>Runner: allow
+                Runner->>Worker: Execute implementation step
+                Worker-->>Runner: Step result
+            else Action denied
+                Policy-->>Runner: deny
+                Runner-->>CLI: Stop step and emit audit event
+            end
+        end
+        Runner->>Eval: Evaluate final result
+        Eval-->>CLI: Return summary, steps, evaluation, audit count
+    end
+
+    rect rgb(245, 255, 245)
+        Note over Runner,Deploy: SDLC run_sdlc_pipeline() path
+        Runner->>Sched: Plan SDLC timeline
+        Sched-->>Runner: Stage order
+        Runner->>Solver: Intake requirements from Jira, Figma, Lucid via MCP
+        Solver-->>Runner: Requirements package
+        Runner->>Planner: Convert requirements into executable tasks
+        Planner-->>Runner: Task breakdown
+        Runner->>Worker: Generate code and tests
+        Worker-->>Runner: Code generation result
+        Runner->>Build: Build and package
+        Build-->>Runner: Build result
+        loop Validation loop
+            Runner->>Validate: Run validation gates and static analysis
+            alt Go decision
+                Validate-->>Runner: pass and go
+                Runner->>Deploy: Trigger CI/CD deployment
+                Deploy-->>Runner: Deployment result
+                Runner->>Eval: Observability checkpoint
+                Eval-->>CLI: Pipeline complete
+            else No-go decision
+                Validate-->>Runner: fail and no-go
+                Runner->>Worker: Rework failed area
+                Worker-->>Runner: Updated result
+            end
+        end
+    end
+
+    Note over Solver,Deploy: External adapters are wired, but many agent results are still deterministic stubs
+    Note over User,Deploy: To fully implement this platform: make workers execute real work, route reasoning through ModelGateway, persist traces and artifacts, expand policy enforcement, and replace simulated adapters with production integrations

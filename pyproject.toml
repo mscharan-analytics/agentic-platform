@@ -1,0 +1,91 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "enterprise-agent-platform"
+version = "0.1.0"
+description = "Enterprise autonomous multi-agent platform with Ollama-first model routing"
+readme = "README.md"
+license = "Apache-2.0"
+authors = [{name = "Enterprise Agent Platform", email = "platform@example.com"}]
+keywords = ["agents", "orchestration", "autonomous", "llm", "ollama"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Libraries :: Application Frameworks",
+]
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2.7.0",
+  "typing-extensions>=4.9.0"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+  "pytest-asyncio>=0.23.0",
+  "ruff>=0.5.0",
+  "mypy>=1.10.0",
+  "build>=1.0.0",
+  "twine>=4.0.0"
+]
+mcp = [
+  "fastmcp>=0.2.0"
+]
+api = [
+  "fastapi>=0.109.0",
+  "uvicorn[standard]>=0.27.0",
+  "pydantic-settings>=2.1.0",
+  "pyjwt>=2.8.0",
+  "python-multipart>=0.0.6"
+]
+docker = [
+  "docker>=6.0.0"
+]
+ollama = [
+  "ollama>=0.1.0",
+  "httpx>=0.24.0"
+]
+deployment = [
+  "docker>=6.0.0",
+  "azure-identity>=1.13.0",
+  "azure-devops>=7.0.0"
+]
+all = [
+  "enterprise-agent-platform[dev,mcp,docker,ollama,deployment]"
+]
+
+[project.urls]
+Homepage = "https://github.com/yourorg/enterprise-agent-platform"
+Documentation = "https://github.com/yourorg/enterprise-agent-platform/tree/main/docs"
+Repository = "https://github.com/yourorg/enterprise-agent-platform.git"
+"Bug Tracker" = "https://github.com/yourorg/enterprise-agent-platform/issues"
+
+[project.scripts]
+agent-platform = "agent_platform.main:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["agent_platform*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+check_untyped_defs = true
+ignore_missing_imports = true
